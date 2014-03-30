@@ -1,0 +1,34 @@
+#!/usr/bin/python
+
+import sys, re
+
+message_file = sys.argv[1]
+
+def check_format_rules(lineno, line):
+    real_lineno = lineno + 1
+    if lineno == 0:
+        if len(line) > 50:
+            return "Error line %d: First line should be less than 50 characters " \
+                    "in length." % (real_lineno,)
+        if re.match('(Issue #[0-9]*(,#[0-9]*)*||No-Issue): ', line) == None:
+            return "Error line %d: First line should start with 'Issue #xxx: ' or 'No-Issue: ' " \
+                   "\nMultiple issues can be separated by ',', e.g., 'Issue #1,#2: '" \
+                   % (real_lineno,)
+    if lineno == 1:
+        if line:
+            return "Error line %d: Second line should be empty." % (real_lineno,)
+    if not line.startswith('#'):
+        if len(line) > 72:
+            return "Error line %d: No line should be over 72 characters long." % (
+                    real_lineno,)
+    return False
+
+
+with open(message_file) as commit_fd:
+    for lineno, line in enumerate(commit_fd):
+        stripped_line = line.strip()
+        e = check_format_rules(lineno, stripped_line)
+        if e:
+            print e
+            sys.exit(1)
+
